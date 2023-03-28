@@ -1,6 +1,9 @@
 let btnAdd = document.querySelectorAll(".btn-add");
 let totalPrice = document.querySelector(".card__title span");
 let cartList = document.querySelectorAll(".card__body")[1];
+const btnDecrease = document.querySelectorAll(".cart-item-btn__decrease");
+const btnIncrease = document.querySelectorAll(".cart-item-btn__increase");
+const btnRemove = document.querySelectorAll(".cart-item-btn__remove");
 
 Array.from(btnAdd).forEach((item) => {
     const id = item.getAttribute("data-id");
@@ -40,79 +43,145 @@ Array.from(btnAdd).forEach((item) => {
                     </div>
             `;
             cartList.appendChild(div);
-            totalPrice.innerHTML = "$" + (parseFloat(totalPrice.innerHTML.slice(1)) + parseFloat(price)).toFixed(2);
-            run();
+            cartList.lastChild.classList.add("add");
+            setTimeout(() => {
+                cartList.lastChild.classList.remove("add");
+            }, 900);
+
+            let btnDecr = cartList.lastChild.querySelector(".btn.cart-item-btn__decrease");
+            let btnIncr = cartList.lastChild.querySelector(".btn.cart-item-btn__increase");
+            let btnRev = cartList.lastChild.querySelector(".btn.cart-item-btn__remove");
+
+            btnDecr.addEventListener("click", () => {
+                const id = btnDecr.getAttribute("data-id");
+                const price = btnDecr.getAttribute("data-price");
+                $.ajax({
+                    method: "GET",
+                    url: "./app/php/addToCart.php",
+                    data: { id: id, count: -1 },
+                }).done(function (msg) {
+                    const newPrice = (parseFloat(totalPrice.innerHTML.slice(1)) - parseFloat(price)).toFixed(2);
+                    totalPrice.innerHTML = "$" + newPrice;
+                    const count = parseInt(btnDecr.nextElementSibling.innerHTML) - 1;
+                    if (count === 0) {
+                        while (btnDecr.className !== "cart-item") {
+                            btnDecr = btnDecr.parentElement;
+                        }
+                        console.log(btnDecr);
+                        btnDecr.classList.add("remove");
+                        setTimeout(() => {
+                            btnDecr.remove();
+                        }, 600);
+                    } else {
+                        btnDecr.nextElementSibling.innerHTML = count;
+                    }
+                });
+            });
+
+            btnIncr.addEventListener("click", () => {
+                const id = btnIncr.getAttribute("data-id");
+                const price = btnIncr.getAttribute("data-price");
+                $.ajax({
+                    method: "GET",
+                    url: "./app/php/addToCart.php",
+                    data: { id: id, count: 1 },
+                }).done(function (msg) {
+                    const newPrice = (parseFloat(totalPrice.innerHTML.slice(1)) + parseFloat(price)).toFixed(2);
+                    totalPrice.innerHTML = "$" + newPrice;
+                    const count = parseInt(btnIncr.previousElementSibling.innerHTML) + 1;
+                    btnIncr.previousElementSibling.innerHTML = count;
+                });
+            });
+
+            btnRev.addEventListener("click", () => {
+                const id = btnRev.getAttribute("data-id");
+                const price = btnRev.getAttribute("data-price");
+                $.ajax({
+                    method: "GET",
+                    url: "./app/php/removeCartItem.php",
+                    data: { id: id },
+                }).done(function (msg) {
+                    const count = parseInt(btnRev.previousElementSibling.getElementsByClassName("count")[0].innerHTML);
+                    const newPrice = (parseFloat(totalPrice.innerHTML.slice(1)) - parseFloat(price) * count).toFixed(2);
+                    totalPrice.innerHTML = "$" + newPrice;
+                    while (btnRev.className !== "cart-item") {
+                        btnRev = btnRev.parentElement;
+                    }
+                    btnRev.classList.add("remove");
+                    setTimeout(() => {
+                        btnRev.remove();
+                    }, 700);
+                });
+            });
+            const newPrice = (parseFloat(totalPrice.innerHTML.slice(1)) + parseFloat(price)).toFixed(2);
+            totalPrice.innerHTML = "$" + newPrice;
         });
     });
 });
-function run() {
-    const btnDecrease = document.querySelectorAll(".cart-item-btn__decrease");
-    const btnIncrease = document.querySelectorAll(".cart-item-btn__increase");
-    const btnRemove = document.querySelectorAll(".cart-item-btn__remove");
-    btnAdd = document.querySelectorAll(".btn-add");
-    totalPrice = document.querySelector(".card__title span");
-    cartList = document.querySelectorAll(".card__body")[1];
 
-    Array.from(btnDecrease).forEach((item) => {
-        const id = item.getAttribute("data-id");
-        const price = item.getAttribute("data-price");
-        item.addEventListener("click", () => {
-            $.ajax({
-                method: "GET",
-                url: "./app/php/addToCart.php",
-                data: { id: id, count: -1 },
-            }).done(function (msg) {
-                // totalPrice = parseFloat(totalPrice.innerHTML);
-                totalPrice.innerHTML = "$" + (parseFloat(totalPrice.innerHTML.slice(1)) - parseFloat(price)).toFixed(2);
-                const count = parseInt(item.nextElementSibling.innerHTML) - 1;
-                if (count === 0) {
-                    while (item.className !== "cart-item") {
-                        item = item.parentElement;
-                    }
-                    item.remove();
-                } else {
-                    item.nextElementSibling.innerHTML = count;
-                }
-            });
-        });
-    });
-
-    Array.from(btnIncrease).forEach((item) => {
-        const id = item.getAttribute("data-id");
-        const price = item.getAttribute("data-price");
-        item.addEventListener("click", () => {
-            $.ajax({
-                method: "GET",
-                url: "./app/php/addToCart.php",
-                data: { id: id, count: 1 },
-            }).done(function (msg) {
-                const newPrice = (parseFloat(totalPrice.innerHTML.slice(1)) + parseFloat(price)).toFixed(2);
-                totalPrice.innerHTML = "$" + newPrice;
-                const count = parseInt(item.previousElementSibling.innerHTML) + 1;
-                item.previousElementSibling.innerHTML = count;
-            });
-        });
-    });
-
-    Array.from(btnRemove).forEach((item) => {
-        const id = item.getAttribute("data-id");
-        const price = item.getAttribute("data-price");
-        item.addEventListener("click", () => {
-            $.ajax({
-                method: "GET",
-                url: "./app/php/removeCartItem.php",
-                data: { id: id },
-            }).done(function (msg) {
-                const count = parseInt(item.previousElementSibling.getElementsByClassName("count")[0].innerHTML);
-                totalPrice.innerHTML =
-                    "$" + (parseFloat(totalPrice.innerHTML.slice(1)) - parseFloat(price) * count).toFixed(2);
+Array.from(btnDecrease).forEach((item) => {
+    const id = item.getAttribute("data-id");
+    const price = item.getAttribute("data-price");
+    item.addEventListener("click", () => {
+        $.ajax({
+            method: "GET",
+            url: "./app/php/addToCart.php",
+            data: { id: id, count: -1 },
+        }).done(function (msg) {
+            const newPrice = (parseFloat(totalPrice.innerHTML.slice(1)) - parseFloat(price)).toFixed(2);
+            totalPrice.innerHTML = "$" + newPrice;
+            const count = parseInt(item.nextElementSibling.innerHTML) - 1;
+            if (count === 0) {
                 while (item.className !== "cart-item") {
                     item = item.parentElement;
                 }
-                item.remove();
-            });
+                item.classList.add("remove");
+                setTimeout(() => {
+                    item.remove();
+                }, 600);
+            } else {
+                item.nextElementSibling.innerHTML = count;
+            }
         });
     });
-}
+});
 
-run();
+Array.from(btnIncrease).forEach((item) => {
+    const id = item.getAttribute("data-id");
+    const price = item.getAttribute("data-price");
+    item.addEventListener("click", () => {
+        $.ajax({
+            method: "GET",
+            url: "./app/php/addToCart.php",
+            data: { id: id, count: 1 },
+        }).done(function (msg) {
+            const newPrice = (parseFloat(totalPrice.innerHTML.slice(1)) + parseFloat(price)).toFixed(2);
+            totalPrice.innerHTML = "$" + newPrice;
+            const count = parseInt(item.previousElementSibling.innerHTML) + 1;
+            item.previousElementSibling.innerHTML = count;
+        });
+    });
+});
+
+Array.from(btnRemove).forEach((item) => {
+    const id = item.getAttribute("data-id");
+    const price = item.getAttribute("data-price");
+    item.addEventListener("click", () => {
+        $.ajax({
+            method: "GET",
+            url: "./app/php/removeCartItem.php",
+            data: { id: id },
+        }).done(function (msg) {
+            const count = parseInt(item.previousElementSibling.getElementsByClassName("count")[0].innerHTML);
+            const newPrice = (parseFloat(totalPrice.innerHTML.slice(1)) - parseFloat(price) * count).toFixed(2);
+            totalPrice.innerHTML = "$" + newPrice;
+            while (item.className !== "cart-item") {
+                item = item.parentElement;
+            }
+            item.classList.add("remove");
+            setTimeout(() => {
+                item.remove();
+            }, 700);
+        });
+    });
+});
