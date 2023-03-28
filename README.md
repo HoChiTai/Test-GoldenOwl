@@ -4,4 +4,6 @@ This is the instruction for web developer intern assignment at [Golden Owl](http
 
 ![Screenshot](./screenshots/screenshot.jpg)
 
-[Live Demo]
+[Live Demo] Sorry, I don't have!
+
+Please clone this git and run index.php
